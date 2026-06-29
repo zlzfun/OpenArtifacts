@@ -27,6 +27,12 @@ class RestoreRequest(BaseModel):
     created_by: str = "api"
 
 
+class PatchArtifactRequest(BaseModel):
+    title: str | None = None
+    status: str | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|workspace)$")
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
     init_db(settings.database_path)
@@ -75,6 +81,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             artifact = store.get_artifact(artifact_id)
             return {"artifact": artifact, "payload": store.get_current_payload(artifact_id)}
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+    @app.get("/api/artifacts")
+    def list_artifacts(
+        workspace: str | None = None,
+        kind: str | None = None,
+        owner: str | None = None,
+        status: str | None = None,
+        visibility: str | None = None,
+        title: str | None = None,
+    ):
+        return store.list_artifacts(
+            {
+                "workspace": workspace,
+                "kind": kind,
+                "owner": owner,
+                "status": status,
+                "visibility": visibility,
+                "title": title,
+            }
+        )
+
+    @app.patch("/api/artifacts/{artifact_id}")
+    def patch_artifact(artifact_id: str, request: PatchArtifactRequest):
+        try:
+            return store.patch_artifact(
+                artifact_id,
+                request.model_dump(exclude_none=True),
+            )
         except KeyError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
 

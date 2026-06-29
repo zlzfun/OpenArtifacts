@@ -174,3 +174,36 @@ class ArtifactStore:
             workspace=artifact["workspace"],
             idempotency_key=f"restore-{artifact_id}-{version_number}-{uuid.uuid4().hex}",
         )
+
+    def list_artifacts(self, filters: dict[str, str | None]) -> list[dict[str, Any]]:
+        clauses = ["archived_at IS NULL"]
+        params: list[str] = []
+        for key in ["workspace", "kind", "owner", "status", "visibility"]:
+            if filters.get(key):
+                clauses.append(f"{key} = ?")
+                params.append(filters[key])
+        if filters.get("title"):
+            clauses.append("title LIKE ?")
+            params.append(f"%{filters['title']}%")
+        where = " AND ".join(clauses)
+        with connect(self.database_path) as db:
+            rows = db.execute(
+                f"SELECT * FROM artifacts WHERE {where} ORDER BY updated_at DESC",
+                params,
+            ).fetchall()
+        return [row_to_dict(row) for row in rows]
+
+    def patch_artifact(self, artifact_id: str, changes: dict[str, Any]) -> dict[str, Any]:
+        allowed = {
+            key: changes[key]
+            for key in ["title", "status", "visibility"]
+            if key in changes
+        }
+        if not allowed:
+            return self.get_artifact(artifact_id)
+        allowed["updated_at"] = now()
+        assignments = ", ".join(f"{key} = ?" for key in allowed)
+        values = list(allowed.values()) + [artifact_id]
+        with transaction(self.database_path) as db:
+            db.execute(f"UPDATE artifacts SET {assignments} WHERE id = ?", values)
+        return self.get_artifact(artifact_id)

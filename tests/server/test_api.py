@@ -108,3 +108,47 @@ def test_invalid_payload_returns_422(tmp_path):
     )
 
     assert response.status_code == 422
+
+
+def test_list_artifacts_filters_by_status(tmp_path):
+    app_client = client(tmp_path)
+    app_client.post(
+        "/api/artifacts/publish",
+        headers={"Authorization": "Bearer secret"},
+        json={
+            "visibility": "private",
+            "payload": valid_payload("One"),
+            "idempotency_key": "one",
+        },
+    )
+
+    response = app_client.get("/api/artifacts?status=draft")
+
+    assert response.status_code == 200
+    assert response.json()[0]["title"] == "One"
+
+
+def test_patch_artifact_changes_title_status_and_visibility(tmp_path):
+    app_client = client(tmp_path)
+    created = app_client.post(
+        "/api/artifacts/publish",
+        headers={"Authorization": "Bearer secret"},
+        json={
+            "visibility": "private",
+            "payload": valid_payload("One"),
+            "idempotency_key": "one",
+        },
+    ).json()
+
+    response = app_client.patch(
+        f"/api/artifacts/{created['artifact_id']}",
+        json={"title": "Renamed", "status": "ready", "visibility": "workspace"},
+    )
+
+    assert response.status_code == 200
+    artifact = app_client.get(f"/api/artifacts/{created['artifact_id']}").json()[
+        "artifact"
+    ]
+    assert artifact["title"] == "Renamed"
+    assert artifact["status"] == "ready"
+    assert artifact["visibility"] == "workspace"
