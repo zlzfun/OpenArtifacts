@@ -159,6 +159,8 @@ def test_rejects_unsafe_image_sources(src):
         '<svg><image href="javascript:alert(1)" /></svg>',
         '<svg><rect fill="url(https://example.com/pattern.svg#p)" /></svg>',
         '<svg><rect stroke="url(javascript:alert(1))" /></svg>',
+        '<!DOCTYPE svg [<!ENTITY x "bad">]><svg><text>&x;</text></svg>',
+        '<foo:svg xmlns:foo="urn:x"><foo:rect /></foo:svg>',
     ],
 )
 def test_rejects_unsafe_svg(svg):
@@ -184,6 +186,18 @@ def test_accepts_svg_internal_url_reference():
                 '<rect fill="url(#gradient)" width="20" height="20" />'
                 "</svg>"
             ),
+        }
+    ]
+
+    validate_payload(payload)
+
+
+def test_accepts_svg_namespace_markup():
+    payload = visual_payload()
+    payload["blocks"] = [
+        {
+            "type": "svg",
+            "svg": '<svg xmlns="http://www.w3.org/2000/svg"><rect /></svg>',
         }
     ]
 

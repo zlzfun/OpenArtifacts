@@ -29,6 +29,7 @@ SUPPORTED_BLOCKS = {
 }
 SUPPORTED_CHART_TYPES = {"bar", "line", "donut"}
 SUPPORTED_CALLOUT_TONES = {"note", "decision", "warning", "success"}
+SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 SAFE_DATA_IMAGE_PREFIXES = (
     "data:image/png;",
     "data:image/jpeg;",
@@ -86,6 +87,9 @@ SAFE_SVG_ATTRS = {
     "y2",
 }
 BLOCKED_HTML = re.compile(r"<\s*/?\s*[a-zA-Z][^>]*>")
+SVG_FORBIDDEN_DECLARATIONS = re.compile(
+    r"<!\s*(?:DOCTYPE|ENTITY)\b", re.IGNORECASE
+)
 SVG_URL_REFERENCE = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.IGNORECASE)
 
 
@@ -100,8 +104,21 @@ def _is_safe_image_src(src: str) -> bool:
     return False
 
 
-def _local_name(name: str) -> str:
-    return name.rsplit("}", 1)[-1]
+def _expanded_name(name: str) -> tuple[str | None, str]:
+    if name.startswith("{"):
+        namespace, _, local = name[1:].partition("}")
+        return namespace, local
+    return None, name
+
+
+def _is_safe_svg_element_name(name: str) -> bool:
+    namespace, local = _expanded_name(name)
+    return namespace in (None, SVG_NAMESPACE) and local in SAFE_SVG_TAGS
+
+
+def _is_safe_svg_attr_name(name: str) -> bool:
+    namespace, local = _expanded_name(name)
+    return namespace is None and local in SAFE_SVG_ATTRS
 
 
 def _is_safe_svg_attr_value(value: str) -> bool:
@@ -127,21 +144,24 @@ def _is_safe_svg_attr_value(value: str) -> bool:
 
 
 def _validate_svg(svg: str) -> None:
+    if SVG_FORBIDDEN_DECLARATIONS.search(svg):
+        raise ValueError("Unsafe SVG")
+
     try:
         root = ElementTree.fromstring(svg)
     except ElementTree.ParseError as error:
         raise ValueError("Unsafe SVG") from error
 
-    if _local_name(root.tag) != "svg":
+    root_namespace, root_local = _expanded_name(root.tag)
+    if root_namespace not in (None, SVG_NAMESPACE) or root_local != "svg":
         raise ValueError("Unsafe SVG")
 
     for element in root.iter():
-        tag = _local_name(element.tag)
-        if tag not in SAFE_SVG_TAGS:
+        if not _is_safe_svg_element_name(element.tag):
             raise ValueError("Unsafe SVG")
         for attr, value in element.attrib.items():
-            attr_name = _local_name(attr)
-            if attr_name.startswith("on") or attr_name not in SAFE_SVG_ATTRS:
+            _, attr_name = _expanded_name(attr)
+            if attr_name.startswith("on") or not _is_safe_svg_attr_name(attr):
                 raise ValueError("Unsafe SVG")
             if isinstance(value, str) and not _is_safe_svg_attr_value(value):
                 raise ValueError("Unsafe SVG")
