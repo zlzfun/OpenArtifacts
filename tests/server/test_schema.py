@@ -157,6 +157,8 @@ def test_rejects_unsafe_image_sources(src):
         '<svg><foreignObject><p>bad</p></foreignObject></svg>',
         '<svg onclick="alert(1)"><rect /></svg>',
         '<svg><image href="javascript:alert(1)" /></svg>',
+        '<svg><rect fill="url(https://example.com/pattern.svg#p)" /></svg>',
+        '<svg><rect stroke="url(javascript:alert(1))" /></svg>',
     ],
 )
 def test_rejects_unsafe_svg(svg):
@@ -165,6 +167,27 @@ def test_rejects_unsafe_svg(svg):
 
     with pytest.raises(ValueError, match="Unsafe SVG"):
         validate_payload(payload)
+
+
+def test_accepts_svg_internal_url_reference():
+    payload = visual_payload()
+    payload["blocks"] = [
+        {
+            "type": "svg",
+            "svg": (
+                '<svg viewBox="0 0 20 20">'
+                "<defs>"
+                '<linearGradient id="gradient">'
+                '<stop offset="0%" />'
+                "</linearGradient>"
+                "</defs>"
+                '<rect fill="url(#gradient)" width="20" height="20" />'
+                "</svg>"
+            ),
+        }
+    ]
+
+    validate_payload(payload)
 
 
 def test_rejects_unknown_chart_type():

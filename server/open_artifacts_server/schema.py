@@ -86,6 +86,7 @@ SAFE_SVG_ATTRS = {
     "y2",
 }
 BLOCKED_HTML = re.compile(r"<\s*/?\s*[a-zA-Z][^>]*>")
+SVG_URL_REFERENCE = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.IGNORECASE)
 
 
 def _is_safe_image_src(src: str) -> bool:
@@ -101,6 +102,28 @@ def _is_safe_image_src(src: str) -> bool:
 
 def _local_name(name: str) -> str:
     return name.rsplit("}", 1)[-1]
+
+
+def _is_safe_svg_attr_value(value: str) -> bool:
+    normalized = value.strip().lower()
+    if any(
+        protocol in normalized
+        for protocol in (
+            "javascript:",
+            "vbscript:",
+            "data:text/html",
+            "http://",
+            "https://",
+        )
+    ):
+        return False
+
+    for url_match in SVG_URL_REFERENCE.finditer(value):
+        target = url_match.group(2).strip()
+        if not target.startswith("#"):
+            return False
+
+    return True
 
 
 def _validate_svg(svg: str) -> None:
@@ -120,9 +143,7 @@ def _validate_svg(svg: str) -> None:
             attr_name = _local_name(attr)
             if attr_name.startswith("on") or attr_name not in SAFE_SVG_ATTRS:
                 raise ValueError("Unsafe SVG")
-            if isinstance(value, str) and value.strip().lower().startswith(
-                ("javascript:", "vbscript:", "data:text/html")
-            ):
+            if isinstance(value, str) and not _is_safe_svg_attr_value(value):
                 raise ValueError("Unsafe SVG")
 
 
