@@ -1,0 +1,6 @@
+server_url = "http://localhost:8787"
+api_base = "/api"
+organization = "local-dev"
+workspace = "default"
+default_visibility = "private"
+publish_token = "dev-token"

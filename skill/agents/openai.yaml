@@ -1,0 +1,4 @@
+interface:
+  display_name: "Open Artifacts"
+  short_description: "Publish agent work to live artifact pages."
+  default_prompt: "Use $open-artifacts to publish the current work as an Open Artifact and return the URL."
