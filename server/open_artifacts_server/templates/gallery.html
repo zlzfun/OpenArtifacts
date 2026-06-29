@@ -2,11 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Open Artifacts Gallery</title>
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body data-gallery="true">
-    <main id="app">Loading gallery...</main>
+    <header class="topbar">
+      <a class="brand" href="/gallery">Open Artifacts</a>
+    </header>
+    <main>
+      <section class="surface">
+        <div class="section-header">
+          <h1>Gallery</h1>
+          <input id="gallery-filter" type="search" placeholder="Filter artifacts">
+        </div>
+        <div id="gallery-root">Loading gallery...</div>
+      </section>
+    </main>
     <script src="/static/app.js"></script>
   </body>
 </html>

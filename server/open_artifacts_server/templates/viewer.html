@@ -2,11 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Open Artifact</title>
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body data-artifact-id="{{ artifact_id }}">
-    <main id="app">Loading artifact...</main>
+    <header class="topbar">
+      <a class="brand" href="/gallery">Open Artifacts</a>
+      <button id="copy-link" type="button">Copy link</button>
+    </header>
+    <main>
+      <section id="artifact-root" class="surface">Loading artifact...</section>
+      <aside id="versions-root" class="versions"></aside>
+    </main>
     <script src="/static/app.js"></script>
   </body>
 </html>
