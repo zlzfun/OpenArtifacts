@@ -5,7 +5,7 @@ shareable, live-updating web artifacts.
 
 ## MVP Shape
 
-- `skill/`: preconfigured agent Skill and publish helper.
+- `open-artifacts/`: preconfigured agent Skill and publish helper.
 - `server/`: FastAPI server, SQLite store, viewer, and Gallery.
 
 ## Local Development
@@ -43,8 +43,8 @@ Create `/tmp/open-artifact-payload.json`:
 Publish it:
 
 ```bash
-uv run python skill/scripts/publish_artifact.py \
-  --config skill/config/open-artifacts.toml \
+uv run python open-artifacts/scripts/publish_artifact.py \
+  --config open-artifacts/config/open-artifacts.toml \
   --payload /tmp/open-artifact-payload.json \
   --idempotency-key local-smoke-1
 ```

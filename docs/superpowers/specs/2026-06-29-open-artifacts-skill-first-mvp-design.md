@@ -4,7 +4,7 @@
 
 Open Artifacts is an open-source implementation direction inspired by Anthropic's "Artifacts in Claude Code" announcement published on June 18, 2026. The reference product turns an agent session into a live, shareable, interactive web artifact built from session context, updates the same link over time, keeps version history, exposes a gallery, and defaults to private organization-bounded sharing.
 
-The existing Gemini-generated requirements analysis in `open-artifacts/claude_code_artifacts_requirements_analysis.md` is useful as a broad roadmap, but it overstates MVP scope. The MVP must focus on the core loop: an agent publishes current work context into a structured artifact, the server renders it at a stable URL, and later publishes update the same page with version history.
+The Gemini-generated requirements analysis supplied at project start was useful as a broad roadmap, but it overstated MVP scope and is intentionally not kept in the repository source tree. The MVP must focus on the core loop: an agent publishes current work context into a structured artifact, the server renders it at a stable URL, and later publishes update the same page with version history.
 
 ## Product Direction
 
@@ -80,8 +80,8 @@ The Skill does not claim access to hidden agent internals. It can use context av
 The repo should separate Skill and server source clearly.
 
 ```text
-open-artifacts/
-  skill/
+<repo-root>/
+  open-artifacts/
     SKILL.md
     agents/openai.yaml
     config/open-artifacts.toml
@@ -91,7 +91,7 @@ open-artifacts/
   server/
     backend source
     viewer source
-    tests
+  tests/
 ```
 
 `scripts/publish_artifact.py` is a lightweight HTTP client helper, not a server. Its purpose is to make publish requests deterministic across agent runtimes and avoid brittle hand-written HTTP calls by the model.
@@ -118,7 +118,7 @@ Configuration priority:
 2. Optional user local override config for debugging or temporary switching.
 3. Optional environment variable override as an advanced escape hatch.
 
-The GitHub version must not contain internal server information. It should use localhost defaults or placeholder values. Department-distributed Skill builds can replace `skill/config/open-artifacts.toml` with real server information. When deployment changes, the Skill distribution is updated.
+The GitHub version must not contain internal server information. It should use localhost defaults or placeholder values. Department-distributed Skill builds can replace `open-artifacts/config/open-artifacts.toml` with real server information. When deployment changes, the Skill distribution is updated.
 
 Example open-source config:
 

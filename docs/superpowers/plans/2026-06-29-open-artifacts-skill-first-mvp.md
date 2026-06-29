@@ -28,12 +28,12 @@
 - Create: `tests/server/test_store.py` - SQLite persistence and version tests.
 - Create: `tests/server/test_api.py` - publish/read/restore/list/auth tests.
 - Create: `tests/server/test_viewer.py` - viewer/Gallery route and SSE behavior tests.
-- Create: `skill/SKILL.md` - agent-facing workflow instructions.
-- Create: `skill/agents/openai.yaml` - Skill display metadata.
-- Create: `skill/config/open-artifacts.toml` - open-source localhost config.
-- Create: `skill/references/artifact-schema.md` - Skill-readable schema guide.
-- Create: `skill/references/publishing-protocol.md` - Skill-readable publish protocol.
-- Create: `skill/scripts/publish_artifact.py` - deterministic publish helper.
+- Create: `open-artifacts/SKILL.md` - agent-facing workflow instructions.
+- Create: `open-artifacts/agents/openai.yaml` - Skill display metadata.
+- Create: `open-artifacts/config/open-artifacts.toml` - open-source localhost config.
+- Create: `open-artifacts/references/artifact-schema.md` - Skill-readable schema guide.
+- Create: `open-artifacts/references/publishing-protocol.md` - Skill-readable publish protocol.
+- Create: `open-artifacts/scripts/publish_artifact.py` - deterministic publish helper.
 - Create: `tests/skill/test_publish_artifact.py` - helper config, validation, and HTTP behavior tests.
 
 ### Task 1: Project Scaffold And Test Harness
@@ -101,7 +101,7 @@ test = [
 open-artifacts-server = "open_artifacts_server.app:main"
 
 [tool.pytest.ini_options]
-pythonpath = ["server", "skill/scripts"]
+pythonpath = ["server", "open-artifacts/scripts"]
 testpaths = ["tests"]
 ```
 
@@ -143,7 +143,7 @@ shareable, live-updating web artifacts.
 
 ## MVP Shape
 
-- `skill/`: preconfigured agent Skill and publish helper.
+- `open-artifacts/`: preconfigured agent Skill and publish helper.
 - `server/`: FastAPI server, SQLite store, viewer, and Gallery.
 
 ## Local Development
@@ -1526,15 +1526,15 @@ git commit -m "feat: render artifact viewer and gallery"
 ### Task 7: Skill Package And References
 
 **Files:**
-- Create: `skill/SKILL.md`
-- Create: `skill/agents/openai.yaml`
-- Create: `skill/config/open-artifacts.toml`
-- Create: `skill/references/artifact-schema.md`
-- Create: `skill/references/publishing-protocol.md`
+- Create: `open-artifacts/SKILL.md`
+- Create: `open-artifacts/agents/openai.yaml`
+- Create: `open-artifacts/config/open-artifacts.toml`
+- Create: `open-artifacts/references/artifact-schema.md`
+- Create: `open-artifacts/references/publishing-protocol.md`
 
 - [ ] **Step 1: Create Skill instructions**
 
-Create `skill/SKILL.md`:
+Create `open-artifacts/SKILL.md`:
 
 ```markdown
 ---
@@ -1568,7 +1568,7 @@ Use this Skill to publish the current agent-visible work context to a preconfigu
 
 - [ ] **Step 2: Create Skill metadata**
 
-Create `skill/agents/openai.yaml`:
+Create `open-artifacts/agents/openai.yaml`:
 
 ```yaml
 display_name: Open Artifacts
@@ -1578,7 +1578,7 @@ default_prompt: Publish the current work as an Open Artifact and return the URL.
 
 - [ ] **Step 3: Create Skill config**
 
-Create `skill/config/open-artifacts.toml`:
+Create `open-artifacts/config/open-artifacts.toml`:
 
 ```toml
 server_url = "http://localhost:8787"
@@ -1591,7 +1591,7 @@ publish_token = "dev-token"
 
 - [ ] **Step 4: Create schema reference**
 
-Create `skill/references/artifact-schema.md`:
+Create `open-artifacts/references/artifact-schema.md`:
 
 ```markdown
 # Artifact Schema
@@ -1624,7 +1624,7 @@ Do not include raw HTML or JavaScript.
 
 - [ ] **Step 5: Create publishing protocol reference**
 
-Create `skill/references/publishing-protocol.md`:
+Create `open-artifacts/references/publishing-protocol.md`:
 
 ````markdown
 # Publishing Protocol
@@ -1668,14 +1668,14 @@ On `401`, report invalid Skill/server config. On `422`, revise the payload. On n
 - [ ] **Step 6: Commit Skill docs**
 
 ```bash
-git add skill/SKILL.md skill/agents/openai.yaml skill/config/open-artifacts.toml skill/references/artifact-schema.md skill/references/publishing-protocol.md
+git add open-artifacts/SKILL.md open-artifacts/agents/openai.yaml open-artifacts/config/open-artifacts.toml open-artifacts/references/artifact-schema.md open-artifacts/references/publishing-protocol.md
 git commit -m "feat: add open artifacts skill package"
 ```
 
 ### Task 8: Skill Publish Helper
 
 **Files:**
-- Create: `skill/scripts/publish_artifact.py`
+- Create: `open-artifacts/scripts/publish_artifact.py`
 - Create: `tests/skill/test_publish_artifact.py`
 
 - [ ] **Step 1: Write failing helper tests**
@@ -1726,7 +1726,7 @@ Expected: FAIL with missing `publish_artifact`.
 
 - [ ] **Step 3: Implement publish helper**
 
-Create `skill/scripts/publish_artifact.py`:
+Create `open-artifacts/scripts/publish_artifact.py`:
 
 ```python
 from __future__ import annotations
@@ -1809,7 +1809,7 @@ Expected: `3 passed`.
 - [ ] **Step 5: Commit publish helper**
 
 ```bash
-git add skill/scripts/publish_artifact.py tests/skill/test_publish_artifact.py
+git add open-artifacts/scripts/publish_artifact.py tests/skill/test_publish_artifact.py
 git commit -m "feat: add skill publish helper"
 ```
 
@@ -1851,8 +1851,8 @@ Create `/tmp/open-artifact-payload.json`:
 Publish it:
 
 ```bash
-uv run python skill/scripts/publish_artifact.py \
-  --config skill/config/open-artifacts.toml \
+uv run python open-artifacts/scripts/publish_artifact.py \
+  --config open-artifacts/config/open-artifacts.toml \
   --payload /tmp/open-artifact-payload.json \
   --idempotency-key local-smoke-1
 ```
@@ -1885,8 +1885,8 @@ Expected: server starts on `http://127.0.0.1:8787`.
 Run:
 
 ```bash
-uv run python skill/scripts/publish_artifact.py \
-  --config skill/config/open-artifacts.toml \
+uv run python open-artifacts/scripts/publish_artifact.py \
+  --config open-artifacts/config/open-artifacts.toml \
   --payload /tmp/open-artifact-payload.json \
   --idempotency-key local-smoke-1
 ```
