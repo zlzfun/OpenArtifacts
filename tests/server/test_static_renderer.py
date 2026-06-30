@@ -35,6 +35,31 @@ def test_app_js_contains_visual_block_renderers():
 def test_styles_css_contains_visual_system_hooks():
     styles = read_static("styles.css")
 
+    for token in [
+        "color-scheme: light;",
+        "--canvas: #f8f4ec;",
+        "--canvas-ink: #211d19;",
+        "--surface: #fffdf8;",
+        "--surface-bone: #f0eadf;",
+        "--surface-dark: #1f1d1a;",
+        "--surface-dark-2: #2b2925;",
+        "--muted: #716b61;",
+        "--muted-2: #9b9286;",
+        "--line: rgba(33, 29, 25, 0.16);",
+        "--line-strong: rgba(33, 29, 25, 0.34);",
+        "--accent: #df5b2f;",
+        "--accent-deep: #a93d21;",
+        "--success: #417d57;",
+        "--warning: #a8671c;",
+        "--danger: #a94438;",
+        "--shadow: 0 18px 48px rgba(64, 49, 29, 0.12);",
+        "--radius: 8px;",
+        '--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;',
+        '--body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+        '--display: Georgia, "Times New Roman", serif;',
+    ]:
+        assert token in styles
+
     for selector in [
         ".artifact-shell",
         ".artifact-card",
@@ -47,3 +72,6 @@ def test_styles_css_contains_visual_system_hooks():
         ".gallery-grid",
     ]:
         assert selector in styles
+
+    assert "@media (max-width: 900px)" in styles
+    assert ".gallery-shell" in styles
