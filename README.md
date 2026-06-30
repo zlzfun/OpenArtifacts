@@ -21,6 +21,11 @@ The deployment script assumes `uv`, `sudo`, and `nginx` are present. It can
 bootstrap Node and PM2 locally through `uvx nodeenv` when the machine does not
 already have `npm` or `pm2`.
 
+Deployment settings live in `scripts/deploy_backend_linux.conf`, which is local
+and ignored by git. The tracked template is
+`scripts/deploy_backend_linux.example.conf`; if the local config is missing, the
+script creates it from the template.
+
 Edit `scripts/deploy_backend_linux.conf`, then run the script directly:
 
 ```bash

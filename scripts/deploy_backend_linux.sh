@@ -37,10 +37,22 @@ user_pip_index_url="${PIP_INDEX_URL-}"
 user_pip_extra_index_url="${PIP_EXTRA_INDEX_URL-}"
 
 DEPLOY_CONFIG="${DEPLOY_CONFIG:-${script_dir}/deploy_backend_linux.conf}"
+DEPLOY_CONFIG_EXAMPLE="${DEPLOY_CONFIG_EXAMPLE:-${script_dir}/deploy_backend_linux.example.conf}"
 
 require_command uv
 require_command sudo
 UV_BIN="$(command -v uv)"
+
+ensure_deploy_config() {
+  if [[ -f "${DEPLOY_CONFIG}" ]]; then
+    return
+  fi
+  if [[ ! -f "${DEPLOY_CONFIG_EXAMPLE}" ]]; then
+    fail "deploy config not found: ${DEPLOY_CONFIG}; example not found: ${DEPLOY_CONFIG_EXAMPLE}"
+  fi
+  cp "${DEPLOY_CONFIG_EXAMPLE}" "${DEPLOY_CONFIG}"
+  log "created local deploy config: ${DEPLOY_CONFIG}"
+}
 
 source_deploy_config() {
   if [[ -f "${DEPLOY_CONFIG}" ]]; then
@@ -72,6 +84,7 @@ resolve_path_defaults() {
   LOCAL_PM2_PREFIX="${LOCAL_PM2_PREFIX:-${TOOLS_DIR}/pm2}"
 }
 
+ensure_deploy_config
 source_deploy_config
 
 resolve_path_defaults
