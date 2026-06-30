@@ -24,6 +24,8 @@ user_domain="${DOMAIN-}"
 user_nginx_server_name="${NGINX_SERVER_NAME-}"
 user_nginx_bin="${NGINX_BIN-}"
 user_nginx_conf_path="${NGINX_CONF_PATH-}"
+user_nginx_listen_port="${NGINX_LISTEN_PORT-}"
+user_nginx_listen_options="${NGINX_LISTEN_OPTIONS-}"
 user_public_base_url="${PUBLIC_BASE_URL-}"
 user_open_artifacts_db="${OPEN_ARTIFACTS_DB-}"
 user_open_artifacts_public_base_url="${OPEN_ARTIFACTS_PUBLIC_BASE_URL-}"
@@ -109,6 +111,8 @@ APP_HOST="${user_app_host:-${APP_HOST:-127.0.0.1}}"
 APP_PORT="${user_app_port:-${APP_PORT:-8787}}"
 NGINX_SERVER_NAME="${user_nginx_server_name:-${NGINX_SERVER_NAME:-${user_domain:-${DOMAIN:-_}}}}"
 NGINX_CONF_PATH="${user_nginx_conf_path:-${NGINX_CONF_PATH:-/etc/nginx/conf.d/open-artifacts.conf}}"
+NGINX_LISTEN_PORT="${user_nginx_listen_port:-${NGINX_LISTEN_PORT:-80}}"
+NGINX_LISTEN_OPTIONS="${user_nginx_listen_options:-${NGINX_LISTEN_OPTIONS:-}}"
 SETUP_PM2_STARTUP="${user_setup_pm2_startup:-${SETUP_PM2_STARTUP:-0}}"
 VENV_DIR="$(make_project_path "${user_venv_dir:-${VENV_DIR:-.venv}}")"
 UV_INDEX_URL="${user_uv_index_url:-${UV_INDEX_URL:-${user_pip_index_url:-${PIP_INDEX_URL:-}}}}"
@@ -128,9 +132,17 @@ else
 fi
 
 if [[ "${NGINX_SERVER_NAME}" == "_" ]]; then
-  default_public_base_url="http://localhost"
+  if [[ "${NGINX_LISTEN_PORT}" == "80" ]]; then
+    default_public_base_url="http://localhost"
+  else
+    default_public_base_url="http://localhost:${NGINX_LISTEN_PORT}"
+  fi
 else
-  default_public_base_url="http://${NGINX_SERVER_NAME}"
+  if [[ "${NGINX_LISTEN_PORT}" == "80" ]]; then
+    default_public_base_url="http://${NGINX_SERVER_NAME}"
+  else
+    default_public_base_url="http://${NGINX_SERVER_NAME}:${NGINX_LISTEN_PORT}"
+  fi
 fi
 
 OPEN_ARTIFACTS_DB="${user_open_artifacts_db:-${OPEN_ARTIFACTS_DB:-${DATA_DIR}/open-artifacts.sqlite3}}"
@@ -253,7 +265,7 @@ render_nginx_config() {
   local target="$1"
   cat > "${target}" <<NGINX
 server {
-    listen 80;
+    listen ${NGINX_LISTEN_PORT}${NGINX_LISTEN_OPTIONS:+ ${NGINX_LISTEN_OPTIONS}};
     server_name ${NGINX_SERVER_NAME};
 
     client_max_body_size 20m;

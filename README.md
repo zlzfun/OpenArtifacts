@@ -37,13 +37,24 @@ dependencies with `uv pip install -e .`, starts or restarts the FastAPI backend
 with PM2, writes `/etc/nginx/conf.d/open-artifacts.conf`, validates nginx, and
 reloads it. Runtime files are stored under `.deploy/` and `.data/`.
 
-For IP-only deployment, keep nginx as a catch-all server and set the public URL
-to the server IP:
+For IP-only deployment, set nginx to match the actual server IP and set the
+public URL to the same IP:
 
 ```bash
-NGINX_SERVER_NAME="_"
+NGINX_SERVER_NAME="203.0.113.10"
 PUBLIC_BASE_URL="http://203.0.113.10"
 ```
+
+If another backend already owns `IP:80`, use a distinct nginx listen port:
+
+```bash
+NGINX_SERVER_NAME="203.0.113.10"
+NGINX_LISTEN_PORT="8788"
+PUBLIC_BASE_URL="http://203.0.113.10:8788"
+```
+
+`NGINX_SERVER_NAME="_"` is still supported as a catch-all, but it is fragile
+when multiple nginx sites share the same IP and port.
 
 For domain deployment:
 
