@@ -27,9 +27,10 @@ Edit `scripts/deploy_backend_linux.conf`, then run the script directly:
 ./scripts/deploy_backend_linux.sh
 ```
 
-The script syncs Python dependencies with `uv`, starts or restarts the FastAPI
-backend with PM2, writes `/etc/nginx/conf.d/open-artifacts.conf`, validates
-nginx, and reloads it. Runtime files are stored under `.deploy/` and `.data/`.
+The script creates a virtual environment with `uv venv`, installs Python
+dependencies with `uv pip install -e .`, starts or restarts the FastAPI backend
+with PM2, writes `/etc/nginx/conf.d/open-artifacts.conf`, validates nginx, and
+reloads it. Runtime files are stored under `.deploy/` and `.data/`.
 
 For IP-only deployment, keep nginx as a catch-all server and set the public URL
 to the server IP:
@@ -44,6 +45,16 @@ For domain deployment:
 ```bash
 NGINX_SERVER_NAME="artifacts.example.com"
 PUBLIC_BASE_URL="https://artifacts.example.com"
+```
+
+If the server needs an explicit Python package index, set it in
+`scripts/deploy_backend_linux.conf`. Leave these blank to use the server's
+existing pip/uv configuration:
+
+```bash
+UV_INDEX_URL=""
+UV_EXTRA_INDEX_URL=""
+UV_INSECURE_HOST=""
 ```
 
 ## Manual Smoke Test

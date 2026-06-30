@@ -29,6 +29,12 @@ user_open_artifacts_db="${OPEN_ARTIFACTS_DB-}"
 user_open_artifacts_public_base_url="${OPEN_ARTIFACTS_PUBLIC_BASE_URL-}"
 user_open_artifacts_publish_token="${OPEN_ARTIFACTS_PUBLISH_TOKEN-}"
 user_setup_pm2_startup="${SETUP_PM2_STARTUP-}"
+user_venv_dir="${VENV_DIR-}"
+user_uv_index_url="${UV_INDEX_URL-}"
+user_uv_extra_index_url="${UV_EXTRA_INDEX_URL-}"
+user_uv_insecure_host="${UV_INSECURE_HOST-}"
+user_pip_index_url="${PIP_INDEX_URL-}"
+user_pip_extra_index_url="${PIP_EXTRA_INDEX_URL-}"
 
 DEPLOY_CONFIG="${DEPLOY_CONFIG:-${script_dir}/deploy_backend_linux.conf}"
 
@@ -45,12 +51,20 @@ source_deploy_config() {
   fi
 }
 
+make_project_path() {
+  case "$1" in
+    /*) printf '%s\n' "$1" ;;
+    *) printf '%s/%s\n' "${project_dir}" "$1" ;;
+  esac
+}
+
 resolve_path_defaults() {
   NGINX_CONF_PATH="${NGINX_CONF_PATH:-/etc/nginx/conf.d/open-artifacts.conf}"
   NODE_VERSION="${NODE_VERSION:-22.11.0}"
   PM2_VERSION="${PM2_VERSION:-latest}"
-  DEPLOY_DIR="${DEPLOY_DIR:-${project_dir}/.deploy}"
-  DATA_DIR="${DATA_DIR:-${project_dir}/.data}"
+  DEPLOY_DIR="$(make_project_path "${DEPLOY_DIR:-.deploy}")"
+  DATA_DIR="$(make_project_path "${DATA_DIR:-.data}")"
+  VENV_DIR="$(make_project_path "${VENV_DIR:-.venv}")"
   TOOLS_DIR="${TOOLS_DIR:-${DEPLOY_DIR}/tools}"
   ENV_FILE="${ENV_FILE:-${DEPLOY_DIR}/open-artifacts.env}"
   RUNNER_PATH="${RUNNER_PATH:-${DEPLOY_DIR}/run-open-artifacts.sh}"
@@ -83,6 +97,10 @@ APP_PORT="${user_app_port:-${APP_PORT:-8787}}"
 NGINX_SERVER_NAME="${user_nginx_server_name:-${NGINX_SERVER_NAME:-${user_domain:-${DOMAIN:-_}}}}"
 NGINX_CONF_PATH="${user_nginx_conf_path:-${NGINX_CONF_PATH:-/etc/nginx/conf.d/open-artifacts.conf}}"
 SETUP_PM2_STARTUP="${user_setup_pm2_startup:-${SETUP_PM2_STARTUP:-0}}"
+VENV_DIR="$(make_project_path "${user_venv_dir:-${VENV_DIR:-.venv}}")"
+UV_INDEX_URL="${user_uv_index_url:-${UV_INDEX_URL:-${user_pip_index_url:-${PIP_INDEX_URL:-}}}}"
+UV_EXTRA_INDEX_URL="${user_uv_extra_index_url:-${UV_EXTRA_INDEX_URL:-${user_pip_extra_index_url:-${PIP_EXTRA_INDEX_URL:-}}}}"
+UV_INSECURE_HOST="${user_uv_insecure_host:-${UV_INSECURE_HOST:-}}"
 
 if [[ -n "${user_nginx_bin}" ]]; then
   NGINX_BIN="${user_nginx_bin}"
@@ -127,6 +145,7 @@ write_env_file() {
     printf 'OPEN_ARTIFACTS_PUBLISH_TOKEN=%q\n' "${OPEN_ARTIFACTS_PUBLISH_TOKEN}"
     printf 'APP_HOST=%q\n' "${APP_HOST}"
     printf 'APP_PORT=%q\n' "${APP_PORT}"
+    printf 'VENV_DIR=%q\n' "${VENV_DIR}"
   } > "${ENV_FILE}"
 }
 
@@ -138,7 +157,7 @@ write_runner() {
     printf 'set -a\n'
     printf 'source %q\n' "${ENV_FILE}"
     printf 'set +a\n'
-    printf 'exec %q run uvicorn open_artifacts_server.app:app --app-dir server --host "${APP_HOST}" --port "${APP_PORT}"\n' "${UV_BIN}"
+    printf 'exec "${VENV_DIR}/bin/python" -m uvicorn open_artifacts_server.app:app --app-dir server --host "${APP_HOST}" --port "${APP_PORT}"\n'
   } > "${RUNNER_PATH}"
   chmod 0755 "${RUNNER_PATH}"
 }
@@ -174,9 +193,31 @@ resolve_pm2() {
   export PM2_BIN
 }
 
-sync_python_dependencies() {
-  log "syncing Python dependencies with uv"
-  (cd "${project_dir}" && "${UV_BIN}" sync --frozen)
+install_python_dependencies() {
+  local uv_pip_args
+  log "installing Python dependencies with uv pip install -e ."
+  mkdir -p "$(dirname "${VENV_DIR}")"
+  if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+    "${UV_BIN}" venv "${VENV_DIR}"
+  fi
+
+  (
+    cd "${project_dir}"
+    # shellcheck disable=SC1091
+    source "${VENV_DIR}/bin/activate"
+    uv_pip_args=(pip install)
+    if [[ -n "${UV_INDEX_URL}" ]]; then
+      uv_pip_args+=(--index-url "${UV_INDEX_URL}")
+    fi
+    if [[ -n "${UV_EXTRA_INDEX_URL}" ]]; then
+      uv_pip_args+=(--extra-index-url "${UV_EXTRA_INDEX_URL}")
+    fi
+    if [[ -n "${UV_INSECURE_HOST}" ]]; then
+      uv_pip_args+=(--allow-insecure-host "${UV_INSECURE_HOST}")
+    fi
+    uv_pip_args+=(-e .)
+    "${UV_BIN}" "${uv_pip_args[@]}"
+  )
 }
 
 start_pm2_process() {
@@ -253,8 +294,12 @@ reload_nginx_if_needed() {
     fail "nginx config validation failed"
   fi
 
-  if command -v systemctl >/dev/null 2>&1; then
-    sudo systemctl reload nginx
+  if command -v systemctl >/dev/null 2>&1 && sudo systemctl list-unit-files nginx.service >/dev/null 2>&1; then
+    sudo systemctl start nginx
+    sudo "${NGINX_BIN}" -s reload
+  elif command -v service >/dev/null 2>&1; then
+    sudo service nginx start || true
+    sudo "${NGINX_BIN}" -s reload
   else
     sudo "${NGINX_BIN}" -s reload
   fi
@@ -263,7 +308,7 @@ reload_nginx_if_needed() {
 main() {
   write_env_file
   write_runner
-  sync_python_dependencies
+  install_python_dependencies
   resolve_pm2
   start_pm2_process
   reload_nginx_if_needed
