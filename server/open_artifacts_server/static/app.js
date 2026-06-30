@@ -11,6 +11,10 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function arrayItems(value) {
+  return Array.isArray(value) ? value.filter((item) => item && typeof item === "object") : [];
+}
+
 function renderBlockShell(block, body, className = "") {
   const title = block.title ? `<h2>${escapeHtml(block.title)}</h2>` : "";
   const caption = block.caption ? `<p class="caption">${escapeHtml(block.caption)}</p>` : "";
@@ -83,7 +87,7 @@ function renderDonutChart(block, series) {
 }
 
 function renderChart(block) {
-  const series = Array.isArray(block.series) ? block.series : [];
+  const series = arrayItems(block.series);
   const chartType = block.chart_type || "bar";
   let body = "";
   if (chartType === "line") body = renderLineChart(block, series);
@@ -111,14 +115,14 @@ function renderCallout(block) {
 }
 
 function renderStatGrid(block) {
-  const stats = (block.stats || [])
+  const stats = arrayItems(block.stats)
     .map((stat) => `<li><span>${escapeHtml(stat.label ?? "")}</span><strong>${escapeHtml(stat.value ?? "")}</strong><p>${escapeHtml(stat.detail ?? "")}</p></li>`)
     .join("");
   return renderBlockShell(block, `<ul class="stat-grid">${stats}</ul>`, "block-stat-grid");
 }
 
 function renderFlow(block) {
-  const items = (block.items || [])
+  const items = arrayItems(block.items)
     .map((item, index) => `<li><span>${String(index + 1).padStart(2, "0")}</span><strong>${escapeHtml(item.label ?? "")}</strong><p>${escapeHtml(item.detail ?? "")}</p></li>`)
     .join("");
   return renderBlockShell(block, `<ol class="flow-list">${items}</ol>`, "block-flow");
