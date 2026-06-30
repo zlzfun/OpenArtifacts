@@ -13,7 +13,7 @@ Use this Skill to publish the current agent-visible work context to a preconfigu
 2. If updating, reuse the visible `artifact_id` from the conversation.
 3. Gather only context visible to the agent: user request, conversation summary, files read, diffs, command output, test results, and explicit user-provided material.
 4. Choose `kind`: `work-summary`, `investigation`, `walkthrough`, `checklist`, or `dashboard`.
-5. Build a payload using `references/artifact-schema.md`.
+5. Build a payload using `references/artifact-schema.md`. Prefer structured visual blocks when they improve comprehension: `chart` for numbers and trends, `flow` for processes and architecture, `stat-grid` for key figures, `image` for browser-visible screenshots or generated images, `svg` for compact diagrams, and `callout` for decisions, risks, outcomes, or next steps. Use `markdown` for narrative context, not as the default container for everything.
 6. Publish using `scripts/publish_artifact.py` and `references/publishing-protocol.md`.
 7. Report the returned URL, version, and `artifact_id`.
 8. Keep the `artifact_id` in the response so future turns can update the same Artifact.
@@ -25,3 +25,4 @@ Use this Skill to publish the current agent-visible work context to a preconfigu
 - Do not put raw HTML or JavaScript in Markdown blocks.
 - Prefer concise blocks over dumping full logs.
 - Use code references for file locations instead of embedding large source files.
+- Do not use local filesystem image paths unless they are served by the Open Artifacts server; use browser-visible URLs, generated SVG, or small safe `data:image` payloads.
