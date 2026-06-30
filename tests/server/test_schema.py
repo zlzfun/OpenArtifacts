@@ -149,6 +149,37 @@ def test_rejects_unsafe_image_sources(src):
         validate_payload(payload)
 
 
+def test_rejects_svg_data_image_source():
+    payload = visual_payload()
+    payload["blocks"] = [
+        {"type": "image", "src": "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4="}
+    ]
+
+    with pytest.raises(ValueError, match="Unsafe image source"):
+        validate_payload(payload)
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        {"type": "code-reference", "references": {}},
+        {"type": "table", "columns": {}, "rows": []},
+        {"type": "table", "columns": [], "rows": [{}]},
+        {"type": "chart", "series": {}},
+        {"type": "stat-grid", "stats": {}},
+        {"type": "flow", "items": {}},
+        {"type": "timeline", "items": {}},
+        {"type": "checklist", "items": {}},
+    ],
+)
+def test_rejects_malformed_nested_collection_fields(block):
+    payload = visual_payload()
+    payload["blocks"] = [block]
+
+    with pytest.raises(ValueError, match="Invalid block field"):
+        validate_payload(payload)
+
+
 @pytest.mark.parametrize(
     "svg",
     [

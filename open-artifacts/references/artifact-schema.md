@@ -31,7 +31,7 @@ Supported blocks:
 
 Prefer visual blocks when they make the artifact easier to understand: use `chart` for quantitative comparisons, `flow` for processes or architecture, `stat-grid` for key figures, `image` for browser-visible screenshots or generated images, `svg` for compact generated diagrams, and `callout` for decisions, risks, outcomes, or next steps.
 
-`image.src` must be browser-visible: use `http`/`https`, a relative URL already served by the Open Artifacts server, or a small `data:image/png`, `data:image/jpeg`, `data:image/gif`, `data:image/webp`, or `data:image/svg+xml` payload. Local filesystem paths from a conversation are not automatically visible in the browser.
+`image.src` must be browser-visible: use `http`/`https`, a relative URL already served by the Open Artifacts server, or a small raster `data:image/png`, `data:image/jpeg`, `data:image/gif`, or `data:image/webp` payload. Local filesystem paths from a conversation are not automatically visible in the browser. Put generated SVG markup in an `svg` block instead of an `image` data URL.
 
 `svg` is restricted to safe inline SVG only. Do not include scripts, event handlers, `foreignObject`, external references, or unsafe URL protocols.
 

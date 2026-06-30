@@ -35,7 +35,6 @@ SAFE_DATA_IMAGE_PREFIXES = (
     "data:image/jpeg;",
     "data:image/gif;",
     "data:image/webp;",
-    "data:image/svg+xml;",
 )
 SAFE_SVG_TAGS = {
     "svg",
@@ -179,6 +178,30 @@ def _validate_visual_block(block: dict[str, Any]) -> None:
         raise ValueError("Unsupported callout tone")
 
 
+def _require_list(block: dict[str, Any], field: str) -> None:
+    if field in block and not isinstance(block[field], list):
+        block_type = block.get("type", "unknown")
+        raise ValueError(f"Invalid block field: {block_type}.{field} must be a list")
+
+
+def _validate_nested_shapes(block: dict[str, Any]) -> None:
+    block_type = block.get("type")
+    if block_type in {"timeline", "checklist", "flow"}:
+        _require_list(block, "items")
+    elif block_type == "code-reference":
+        _require_list(block, "references")
+    elif block_type == "table":
+        _require_list(block, "columns")
+        _require_list(block, "rows")
+        for row in block.get("rows", []):
+            if not isinstance(row, list):
+                raise ValueError("Invalid block field: table.rows entries must be lists")
+    elif block_type == "chart":
+        _require_list(block, "series")
+    elif block_type == "stat-grid":
+        _require_list(block, "stats")
+
+
 def validate_payload(raw: dict[str, Any]) -> dict[str, Any]:
     payload = deepcopy(raw)
 
@@ -199,6 +222,7 @@ def validate_payload(raw: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("Unsupported block type")
         if block_type == "markdown" and BLOCKED_HTML.search(block.get("content", "")):
             raise ValueError("Raw HTML is not allowed")
+        _validate_nested_shapes(block)
         _validate_visual_block(block)
 
     return payload

@@ -25,4 +25,4 @@ Use this Skill to publish the current agent-visible work context to a preconfigu
 - Do not put raw HTML or JavaScript in Markdown blocks.
 - Prefer concise blocks over dumping full logs.
 - Use code references for file locations instead of embedding large source files.
-- Do not use local filesystem image paths unless they are served by the Open Artifacts server; use browser-visible URLs, generated SVG, or small safe `data:image` payloads.
+- Do not use local filesystem image paths unless they are served by the Open Artifacts server; use browser-visible URLs, generated SVG in `svg` blocks, or small safe raster `data:image/png`, `data:image/jpeg`, `data:image/gif`, or `data:image/webp` payloads.
