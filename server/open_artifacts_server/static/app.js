@@ -131,7 +131,7 @@ function renderFlow(block) {
 function renderBlock(block) {
   if (block.type === "markdown") return renderMarkdown(block);
   if (block.type === "timeline") {
-    const items = (block.items || []).map((item) => `<li><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.time || "")}</span><p>${escapeHtml(item.detail || "")}</p></li>`).join("");
+    const items = arrayItems(block.items).map((item) => `<li><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.time || "")}</span><p>${escapeHtml(item.detail || "")}</p></li>`).join("");
     return `<section class="block"><h2>${escapeHtml(block.title || "Timeline")}</h2><ol class="timeline">${items}</ol></section>`;
   }
   if (block.type === "code-reference") {
@@ -146,7 +146,7 @@ function renderBlock(block) {
     );
   }
   if (block.type === "checklist") {
-    const items = (block.items || []).map((item) => `<li data-state="${escapeHtml(item.state || "todo")}">${escapeHtml(item.label || "")}<p>${escapeHtml(item.detail || "")}</p></li>`).join("");
+    const items = arrayItems(block.items).map((item) => `<li data-state="${escapeHtml(item.state || "todo")}">${escapeHtml(item.label || "")}<p>${escapeHtml(item.detail || "")}</p></li>`).join("");
     return `<section class="block"><h2>${escapeHtml(block.title || "Checklist")}</h2><ul class="checklist">${items}</ul></section>`;
   }
   if (block.type === "metric") {
