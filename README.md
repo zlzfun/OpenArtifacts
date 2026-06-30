@@ -15,6 +15,37 @@ uv run pytest
 uv run uvicorn open_artifacts_server.app:app --app-dir server --host 127.0.0.1 --port 8787
 ```
 
+## Linux Backend Deployment
+
+The deployment script assumes `uv`, `sudo`, and `nginx` are present. It can
+bootstrap Node and PM2 locally through `uvx nodeenv` when the machine does not
+already have `npm` or `pm2`.
+
+Edit `scripts/deploy_backend_linux.conf`, then run the script directly:
+
+```bash
+./scripts/deploy_backend_linux.sh
+```
+
+The script syncs Python dependencies with `uv`, starts or restarts the FastAPI
+backend with PM2, writes `/etc/nginx/conf.d/open-artifacts.conf`, validates
+nginx, and reloads it. Runtime files are stored under `.deploy/` and `.data/`.
+
+For IP-only deployment, keep nginx as a catch-all server and set the public URL
+to the server IP:
+
+```bash
+NGINX_SERVER_NAME="_"
+PUBLIC_BASE_URL="http://203.0.113.10"
+```
+
+For domain deployment:
+
+```bash
+NGINX_SERVER_NAME="artifacts.example.com"
+PUBLIC_BASE_URL="https://artifacts.example.com"
+```
+
 ## Manual Smoke Test
 
 Start the server:
