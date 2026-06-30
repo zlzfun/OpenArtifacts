@@ -287,6 +287,30 @@ server {
 NGINX
 }
 
+nginx_systemd_unit_exists() {
+  local unit_files
+  if ! command -v systemctl >/dev/null 2>&1; then
+    return 1
+  fi
+  unit_files="$(sudo systemctl list-unit-files nginx.service --no-legend 2>/dev/null || true)"
+  [[ "${unit_files}" == nginx.service[[:space:]]* ]]
+}
+
+reload_nginx_service() {
+  if nginx_systemd_unit_exists; then
+    if sudo systemctl start nginx; then
+      sudo "${NGINX_BIN}" -s reload
+      return
+    fi
+    log "systemd nginx start failed; falling back to non-systemd reload"
+  fi
+
+  if command -v service >/dev/null 2>&1; then
+    sudo service nginx start || true
+  fi
+  sudo "${NGINX_BIN}" -s reload
+}
+
 reload_nginx_if_needed() {
   local tmp_conf
   local backup_conf=""
@@ -319,15 +343,7 @@ reload_nginx_if_needed() {
     fail "nginx config validation failed"
   fi
 
-  if command -v systemctl >/dev/null 2>&1 && sudo systemctl list-unit-files nginx.service >/dev/null 2>&1; then
-    sudo systemctl start nginx
-    sudo "${NGINX_BIN}" -s reload
-  elif command -v service >/dev/null 2>&1; then
-    sudo service nginx start || true
-    sudo "${NGINX_BIN}" -s reload
-  else
-    sudo "${NGINX_BIN}" -s reload
-  fi
+  reload_nginx_service
 }
 
 main() {
