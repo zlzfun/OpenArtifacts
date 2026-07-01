@@ -202,6 +202,26 @@ def test_rejects_unsafe_svg(svg):
         validate_payload(payload)
 
 
+def test_rejects_svg_with_specific_attribute_message():
+    payload = visual_payload()
+    payload["blocks"] = [
+        {"type": "svg", "svg": '<svg><rect style="fill:red" /></svg>'}
+    ]
+
+    with pytest.raises(ValueError, match="Unsafe SVG: disallowed attribute 'style'"):
+        validate_payload(payload)
+
+
+def test_rejects_svg_with_specific_element_message():
+    payload = visual_payload()
+    payload["blocks"] = [
+        {"type": "svg", "svg": "<svg><foreignObject /></svg>"}
+    ]
+
+    with pytest.raises(ValueError, match="Unsafe SVG: disallowed element <foreignObject>"):
+        validate_payload(payload)
+
+
 def test_accepts_svg_internal_url_reference():
     payload = visual_payload()
     payload["blocks"] = [

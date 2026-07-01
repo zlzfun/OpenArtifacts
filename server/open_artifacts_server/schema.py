@@ -110,6 +110,10 @@ def _expanded_name(name: str) -> tuple[str | None, str]:
     return None, name
 
 
+def _local_name(name: str) -> str:
+    return _expanded_name(name)[1]
+
+
 def _is_safe_svg_element_name(name: str) -> bool:
     namespace, local = _expanded_name(name)
     return namespace in (None, SVG_NAMESPACE) and local in SAFE_SVG_TAGS
@@ -144,26 +148,34 @@ def _is_safe_svg_attr_value(value: str) -> bool:
 
 def _validate_svg(svg: str) -> None:
     if SVG_FORBIDDEN_DECLARATIONS.search(svg):
-        raise ValueError("Unsafe SVG")
+        raise ValueError("Unsafe SVG: DOCTYPE and ENTITY declarations are not allowed")
 
     try:
         root = ElementTree.fromstring(svg)
     except ElementTree.ParseError as error:
-        raise ValueError("Unsafe SVG") from error
+        raise ValueError(f"Unsafe SVG: invalid XML ({error})") from error
 
     root_namespace, root_local = _expanded_name(root.tag)
     if root_namespace not in (None, SVG_NAMESPACE) or root_local != "svg":
-        raise ValueError("Unsafe SVG")
+        raise ValueError("Unsafe SVG: root element must be <svg>")
 
     for element in root.iter():
         if not _is_safe_svg_element_name(element.tag):
-            raise ValueError("Unsafe SVG")
+            raise ValueError(
+                f"Unsafe SVG: disallowed element <{_local_name(element.tag)}>"
+            )
         for attr, value in element.attrib.items():
             _, attr_name = _expanded_name(attr)
             if attr_name.startswith("on") or not _is_safe_svg_attr_name(attr):
-                raise ValueError("Unsafe SVG")
+                raise ValueError(
+                    "Unsafe SVG: disallowed attribute "
+                    f"'{attr_name}' on <{_local_name(element.tag)}>"
+                )
             if isinstance(value, str) and not _is_safe_svg_attr_value(value):
-                raise ValueError("Unsafe SVG")
+                raise ValueError(
+                    "Unsafe SVG: disallowed URL or protocol in attribute "
+                    f"'{attr_name}' on <{_local_name(element.tag)}>"
+                )
 
 
 def _validate_visual_block(block: dict[str, Any]) -> None:

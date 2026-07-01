@@ -37,6 +37,8 @@ def test_publish_requires_token(tmp_path):
     )
 
     assert response.status_code == 401
+    assert "Do not retry with guessed tokens" in response.json()["detail"]
+    assert "Ask the user" in response.json()["detail"]
 
 
 def test_publish_creates_and_reads_artifact(tmp_path):

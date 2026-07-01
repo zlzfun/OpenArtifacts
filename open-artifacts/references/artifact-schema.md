@@ -29,10 +29,12 @@ Supported blocks:
 - `stat-grid`: `{ "type": "stat-grid", "title": "Run summary", "stats": [{"label": "Tests", "value": "24", "detail": "all passing"}] }`
 - `flow`: `{ "type": "flow", "title": "Publishing loop", "items": [{"label": "Agent", "detail": "Builds payload"}] }`
 
-Prefer visual blocks when they make the artifact easier to understand: use `chart` for quantitative comparisons, `flow` for processes or architecture, `stat-grid` for key figures, `image` for browser-visible screenshots or generated images, `svg` for compact generated diagrams, and `callout` for decisions, risks, outcomes, or next steps.
+Prefer visual blocks when they make the artifact easier to understand: use `chart` for quantitative comparisons, `flow` for processes or architecture, `table` for comparisons, `stat-grid` for key figures, `image` for browser-visible screenshots or generated images, and `callout` for decisions, risks, outcomes, or next steps.
 
 `image.src` must be browser-visible: use `http`/`https`, a relative URL already served by the Open Artifacts server, or a small raster `data:image/png`, `data:image/jpeg`, `data:image/gif`, or `data:image/webp` payload. Local filesystem paths from a conversation are not automatically visible in the browser. Put generated SVG markup in an `svg` block instead of an `image` data URL.
 
-`svg` is restricted to safe inline SVG only. Do not include scripts, event handlers, `foreignObject`, external references, or unsafe URL protocols.
+`svg` is restricted to safe inline SVG only. Prefer `flow`, `table`, `chart`, `stat-grid`, and `callout` instead of generating custom SVG. Do not include scripts, event handlers, `foreignObject`, `style`, `href`, `xmlns:*`, external references, or unsafe URL protocols. Allowed SVG elements are `svg`, `g`, `path`, `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `text`, `tspan`, `title`, `desc`, `defs`, `linearGradient`, `radialGradient`, and `stop`. Allowed SVG attributes are `aria-label`, `class`, `cx`, `cy`, `d`, `fill`, `height`, `id`, `offset`, `opacity`, `points`, `r`, `role`, `rx`, `ry`, `stroke`, `stroke-linecap`, `stroke-linejoin`, `stroke-width`, `transform`, `viewBox`, `width`, `x`, `x1`, `x2`, `y`, `y1`, and `y2`. If validation fails, remove the exact disallowed element or attribute named in the error.
 
-Do not include raw HTML or JavaScript.
+Do not include raw HTML or JavaScript. This schema does not currently support a
+general-purpose `html` block; use the structured blocks above so the server can
+render safely.

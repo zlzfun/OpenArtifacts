@@ -50,7 +50,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def require_publish_token(authorization: str | None) -> None:
         expected = f"Bearer {settings.publish_token}"
         if authorization != expected:
-            raise HTTPException(status_code=401, detail="Invalid publish token")
+            raise HTTPException(
+                status_code=401,
+                detail=(
+                    "Invalid publish token. Do not retry with guessed tokens, omit "
+                    "the Authorization header, or brute-force common passwords. "
+                    "Ask the user for the correct publish token, then update the "
+                    "Skill config publish_token or server OPEN_ARTIFACTS_PUBLISH_TOKEN."
+                ),
+            )
 
     @app.post("/api/artifacts/publish")
     def publish(

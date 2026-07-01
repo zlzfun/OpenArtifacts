@@ -81,9 +81,13 @@ Start the server:
 uv run uvicorn open_artifacts_server.app:app --app-dir server --host 127.0.0.1 --port 8787
 ```
 
-Create `/tmp/open-artifact-payload.json`:
+Publish a payload through stdin so no temporary payload file is needed:
 
-```json
+```bash
+uv run python open-artifacts/scripts/publish_artifact.py \
+  --config open-artifacts/config/open-artifacts.toml \
+  --payload - \
+  --idempotency-key local-smoke-1 <<'JSON'
 {
   "schema_version": "0.1",
   "title": "Local smoke test",
@@ -96,15 +100,15 @@ Create `/tmp/open-artifact-payload.json`:
     {"type": "markdown", "title": "Summary", "content": "The server accepted this artifact."}
   ]
 }
-```
-
-Publish it:
-
-```bash
-uv run python open-artifacts/scripts/publish_artifact.py \
-  --config open-artifacts/config/open-artifacts.toml \
-  --payload /tmp/open-artifact-payload.json \
-  --idempotency-key local-smoke-1
+JSON
 ```
 
 Open the returned URL and `/gallery`.
+
+If publishing succeeds but the returned viewer URL misses a non-default nginx
+port, fix the server deployment config and redeploy:
+
+```bash
+NGINX_LISTEN_PORT="8788"
+PUBLIC_BASE_URL="http://203.0.113.10:8788"
+```
